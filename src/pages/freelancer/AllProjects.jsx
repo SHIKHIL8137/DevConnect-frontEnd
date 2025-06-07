@@ -20,27 +20,44 @@ import {
   Clock3,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fetchProjectOfUser } from "../../apis/projectApi";
+import { fetchProjectOfUser, fetchProjectsByIds } from "../../apis/projectApi";
 import Navbar from "../../components/user/navbar/navbar";
 import Footer from "../../components/user/footer/Footer";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
+
+function chunkArray(array, size) {
+  const chunkedArr = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunkedArr.push(array.slice(i, i + size));
+  }
+  return chunkedArr;
+}
 const AllProjects = () => {
   const [project, setProject] = useState([]);
   const navigate = useNavigate()
+  const {user} = useSelector((state)=>state.user)
 
-  const fetch = async () => {
-    try {
-      const response = await fetchProjectOfUser();
-      if (!response.data.status) return toast.error(response.data.message);
-      console.log(response.data.project.length);
-      setProject(response.data.project);
-      console.log(project);
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.message);
-    }
-  };
+ const fetchProjects = async () => {
+   try {
+     const chunks = chunkArray(user.projects, 20);
+     const allProjects = [];
+ 
+     for (const chunk of chunks) {
+       const response = await fetchProjectsByIds(chunk);
+       const data = response.data; 
+       allProjects.push(...data);
+     }
+     setProject(allProjects);
+   } catch (error) {
+     console.error("Failed to fetch projects:", error);
+   }
+ };
+ useEffect(()=>{
+   fetchProjects();
+ },[])
+
   const getStatusConfig = (status) => {
     switch (status) {
       case "completed":
@@ -110,7 +127,7 @@ const AllProjects = () => {
                   key={project._id}
                   className={`bg-white rounded-lg p-5 shadow-md hover:shadow-lg transition-all cursor-pointer duration-300 transform hover:-translate-y-1`}
                   onClick={() =>
-                    navigate(`/client/projectDetails?id=${project._id}`)
+                    navigate(`/freelancer/projectDetail/${project._id}`)
                   }
                 >
                   <div className="flex justify-between items-start">

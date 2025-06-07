@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { AlertCircle, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { createComplaint, upload } from "../../apis/complaintApi";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/user/navbar/navbar";
 import Footer from "../../components/user/footer/Footer";
 
 export default function ComplaintForm() {
-   const location = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate()
   const complainantType = location.pathname.includes("/freelancer")
     ? "freelancer"
     : "client";
@@ -17,7 +18,7 @@ export default function ComplaintForm() {
     subject: "",
     description: "",
   });
- 
+
   const [files, setFiles] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,69 +39,71 @@ export default function ComplaintForm() {
     }
   };
 
-const handleFileUpload = (e) => {
-  const uploadedFiles = Array.from(e.target.files || []);
+  const handleFileUpload = (e) => {
+    const uploadedFiles = Array.from(e.target.files || []);
 
-  const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-  const maxSize = 5 * 1024 * 1024; 
+    const validTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+    ];
+    const maxSize = 5 * 1024 * 1024;
 
-  const newErrors = { ...errors };
+    const newErrors = { ...errors };
 
-  const invalidFile = uploadedFiles.find((file) => {
-    if (!validTypes.includes(file.type)) {
-      newErrors.fileUpload = `File "${file.name}" has an invalid format.`;
-      return true;
-    }
-    if (file.size > maxSize) {
-      newErrors.fileUpload = `File "${file.name}" is too large (max 5MB).`;
-      return true;
-    }
-    return false;
-  });
-
-  if (invalidFile) {
-    setErrors(newErrors);
-    return;
-  }
-
-  const totalFiles = files.length + uploadedFiles.length;
-  if (totalFiles > 5) {
-    setErrors({
-      ...errors,
-      fileUpload: 'You can upload a maximum of 5 files.',
+    const invalidFile = uploadedFiles.find((file) => {
+      if (!validTypes.includes(file.type)) {
+        newErrors.fileUpload = `File "${file.name}" has an invalid format.`;
+        return true;
+      }
+      if (file.size > maxSize) {
+        newErrors.fileUpload = `File "${file.name}" is too large (max 5MB).`;
+        return true;
+      }
+      return false;
     });
-    return;
-  }
-  setErrors((prev) => ({ ...prev, fileUpload: '' }));
-  setFiles((prev) => [...prev, ...uploadedFiles]);
-};
 
+    if (invalidFile) {
+      setErrors(newErrors);
+      return;
+    }
 
+    const totalFiles = files.length + uploadedFiles.length;
+    if (totalFiles > 5) {
+      setErrors({
+        ...errors,
+        fileUpload: "You can upload a maximum of 5 files.",
+      });
+      return;
+    }
+    setErrors((prev) => ({ ...prev, fileUpload: "" }));
+    setFiles((prev) => [...prev, ...uploadedFiles]);
+  };
 
   const removeFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-const uploadFiles = async () => {
-  if (files.length === 0) return [];
+  const uploadFiles = async () => {
+    if (files.length === 0) return [];
 
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append("file", file); 
-  });
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("file", file);
+    });
 
-  try {
-    const response = await upload(formData);
+    try {
+      const response = await upload(formData);
 
-    if (!response.data.status) throw new Error("Upload failed");
+      if (!response.data.status) throw new Error("Upload failed");
 
-    return response.data.files;
-  } catch (error) {
-    console.error("File upload failed:", error);
-    throw error;
-  }
-};
-
+      return response.data.files;
+    } catch (error) {
+      console.error("File upload failed:", error);
+      throw error;
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -126,17 +129,17 @@ const uploadFiles = async () => {
 
     try {
       const attachments = await uploadFiles();
-      console.log('attachment',attachments)
+      console.log("attachment", attachments);
       const complaintData = {
         ...formData,
         attachments,
       };
-      console.log(complaintData)
       const response = await createComplaint(complaintData);
-       
+
       if (!response.data.status) throw new Error("Failed to submit complaint");
       toast.success("Complaint submitted successfully!");
       handleCancel();
+      navigate(`/${complainantType}/complaints`)
     } catch (error) {
       console.error("Submission failed:", error);
       toast.error("Failed to submit complaint. Please try again.");
@@ -158,8 +161,8 @@ const uploadFiles = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <Navbar/>
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white py-8 px-4">
+      <Navbar />
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg my-10">
         <div className="p-8">
           <div className="text-center mb-8">
@@ -186,7 +189,7 @@ const uploadFiles = async () => {
                 Complainant Information
               </h2>
 
-              <div className="space-y-6">               
+              <div className="space-y-6">
                 {/* Against ID */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -265,27 +268,32 @@ const uploadFiles = async () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Attach Evidence (Optional)
+                Attach Evidence
               </label>
 
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors relative">
-  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-  <div className="space-y-2">
-    <p className="text-gray-600">Drag & drop files here or click to browse</p>
-    <p className="text-xs text-gray-500">Accepted formats: PDF, JPG, PNG (max 5MB each)</p>
-  </div>
-  <input
-    type="file"
-    multiple
-    accept=".pdf,.jpg,.jpeg,.png"
-    onChange={handleFileUpload}
-    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-  />
-  {errors.fileUpload && (
-    <p className="mt-2 text-sm text-red-600">{errors.fileUpload}</p>
-  )}
-</div>
-
+                <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <div className="space-y-2">
+                  <p className="text-gray-600">
+                    Drag & drop files here or click to browse
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Accepted formats: PDF, JPG, PNG (max 5MB each)
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                {errors.fileUpload && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.fileUpload}
+                  </p>
+                )}
+              </div>
 
               {files.length > 0 && (
                 <div className="mt-4 space-y-2">
@@ -347,7 +355,7 @@ const uploadFiles = async () => {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }

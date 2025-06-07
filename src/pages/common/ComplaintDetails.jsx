@@ -88,7 +88,7 @@ const ComplaintDetails = () => {
   };
 
   const handleDownloadAttachment = (attachment) => {
-    console.log('Downloading:', attachment);
+  window.open(attachment, '_blank');
   };
 
   const goBack = () => {
@@ -158,7 +158,7 @@ const ComplaintDetails = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white p-6">
       <Navbar />
-      <div className="max-w-4xl mx-auto my-10">
+      <div className="max-w-6xl mx-auto my-10">
         {/* Back Button */}
         <div className="mb-6">
           <button

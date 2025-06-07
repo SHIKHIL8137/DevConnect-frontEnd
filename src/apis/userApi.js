@@ -33,7 +33,6 @@ export const fetchUser = () => {
 };
 
 export const updateProfile = (formData) => {
-  console.log(formData)
   return axiosInstance.patch("/api/user/update-pofile", formData);
 };
 
@@ -53,7 +52,7 @@ export const validateUserChangPswd = (formData) => {
 };
 
 export const updateFreelancer = (formData) => {
-  return axiosInstance.patch("/user/updateFreelancer", formData, {
+  return axiosInstance.patch("/api/user/update-freelancer", formData, {
     withCredentials: true,
   });
 };
@@ -93,3 +92,6 @@ export const removeResume = () => {
 };
 
 
+export const changePassword=(formData)=>{
+  return axiosInstance.patch('/api/user/change-password',formData,{withCredentials:true});
+}

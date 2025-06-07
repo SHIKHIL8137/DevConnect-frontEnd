@@ -9,11 +9,12 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { projectDetails } from "../../apis/projectApi";
+import { onStatusChange, projectDetails } from "../../apis/projectApi";
 import { toast } from "sonner";
 import Navbar from "../../components/user/navbar/navbar";
 import Footer from "../../components/user/footer/Footer";
 import { useNavigate, useLocation } from "react-router-dom";
+import BiddingRoomSection from "../../components/user/biddingCard/BiddingCardClient";
 
 const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -25,10 +26,10 @@ const ProjectDetails = () => {
   const [appliedUser, setAppliedUsers] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState("");
   const [biddingExpired, setBiddingExpired] = useState(false);
-  
+
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
-  
+
   const getProjectDetails = async () => {
     try {
       setLoading(true);
@@ -51,7 +52,6 @@ const ProjectDetails = () => {
     }
   };
 
-  // Calculate time remaining for bidding deadline
   const calculateTimeRemaining = () => {
     if (!project?.biddingDeadline) return;
 
@@ -67,15 +67,25 @@ const ProjectDetails = () => {
 
     setBiddingExpired(false);
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(
+      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (days > 0) {
-      setTimeRemaining(`${days} day${days > 1 ? 's' : ''}, ${hours} hour${hours > 1 ? 's' : ''} remaining`);
+      setTimeRemaining(
+        `${days} day${days > 1 ? "s" : ""}, ${hours} hour${
+          hours > 1 ? "s" : ""
+        } remaining`
+      );
     } else if (hours > 0) {
-      setTimeRemaining(`${hours} hour${hours > 1 ? 's' : ''}, ${minutes} minute${minutes > 1 ? 's' : ''} remaining`);
+      setTimeRemaining(
+        `${hours} hour${hours > 1 ? "s" : ""}, ${minutes} minute${
+          minutes > 1 ? "s" : ""
+        } remaining`
+      );
     } else {
-      setTimeRemaining(`${minutes} minute${minutes > 1 ? 's' : ''} remaining`);
+      setTimeRemaining(`${minutes} minute${minutes > 1 ? "s" : ""} remaining`);
     }
   };
 
@@ -88,17 +98,29 @@ const ProjectDetails = () => {
   useEffect(() => {
     if (project?.biddingDeadline) {
       calculateTimeRemaining();
-      const interval = setInterval(calculateTimeRemaining, 60000); // Update every minute
+      const interval = setInterval(calculateTimeRemaining, 60000); 
       return () => clearInterval(interval);
     }
   }, [project?.biddingDeadline]);
 
-  const handleStatusChange = async (applicationId, freelancerId, newStatus) => {
+  const handleStatusChange = async (
+    freelancerId,
+    freelancerName,
+    newStatus,
+    applicationId
+  ) => {
     try {
       setStatusLoading(`${applicationId}-${newStatus}`);
 
-      await onStatusChange(applicationId, freelancerId, newStatus);
-
+      const response = await onStatusChange({
+        projectId: id,
+        freelancerId,
+        freelancerName,
+        newStatus,
+      });
+      if (!response.data.status) return toast.error(response.data.message);
+      getProjectDetails();
+      toast.success(response.data.message);
       setStatusLoading(null);
     } catch (error) {
       console.error("Error changing status:", error);
@@ -118,7 +140,7 @@ const ProjectDetails = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
-  
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -139,11 +161,23 @@ const ProjectDetails = () => {
     const hoursRemaining = timeDiff / (1000 * 60 * 60);
 
     if (timeDiff <= 0) {
-      return { status: 'expired', color: 'text-red-600 bg-red-50', icon: AlertTriangle };
+      return {
+        status: "expired",
+        color: "text-red-600 bg-red-50",
+        icon: AlertTriangle,
+      };
     } else if (hoursRemaining <= 24) {
-      return { status: 'urgent', color: 'text-orange-600 bg-orange-50', icon: Clock };
+      return {
+        status: "urgent",
+        color: "text-orange-600 bg-orange-50",
+        icon: Clock,
+      };
     } else {
-      return { status: 'active', color: 'text-blue-600 bg-blue-50', icon: Clock };
+      return {
+        status: "active",
+        color: "text-blue-600 bg-blue-50",
+        icon: Clock,
+      };
     }
   };
 
@@ -185,12 +219,12 @@ const ProjectDetails = () => {
   const biddingStatus = getBiddingDeadlineStatus();
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="bg-gradient-to-br from-sky-50 to-white min-h-screen p-6">
       <Navbar />
       <div className="max-w-6xl mt-5 mb-5 mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         <div className="flex justify-end items-end p-5">
-          <button 
-            onClick={() => navigate(`/client/editProject?id=${id}`)} 
+          <button
+            onClick={() => navigate(`/client/editProject?id=${id}`)}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center text-sm"
           >
             <span className="mr-2"></span> Edit Project
@@ -202,27 +236,30 @@ const ProjectDetails = () => {
           </h1>
 
           {project.biddingDeadline && biddingStatus && (
-            <div className={`mb-8 p-4 rounded-lg border ${biddingStatus.color}`}>
+            <div
+              className={`mb-8 p-4 rounded-lg border ${biddingStatus.color}`}
+            >
               <div className="flex items-center space-x-2">
                 <biddingStatus.icon className="h-5 w-5" />
                 <div>
                   <h3 className="font-semibold">
-                    {biddingExpired ? 'Bidding Period Ended' : 'Bidding Deadline'}
+                    {biddingExpired
+                      ? "Bidding Period Ended"
+                      : "Bidding Deadline"}
                   </h3>
                   <p className="text-sm">
-                    {biddingExpired 
-                      ? `Bidding ended on ${formatDate(project.biddingDeadline)}`
-                      : `Deadline: ${formatDate(project.biddingDeadline)}`
-                    }
+                    {biddingExpired
+                      ? `Bidding ended on ${formatDate(
+                          project.biddingDeadline
+                        )}`
+                      : `Deadline: ${formatDate(project.biddingDeadline)}`}
                   </p>
-                  <p className="text-sm font-medium mt-1">
-                    {timeRemaining}
-                  </p>
+                  <p className="text-sm font-medium mt-1">{timeRemaining}</p>
                 </div>
               </div>
             </div>
           )}
-         
+
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <div>
               <h2 className="text-xl font-bold mb-4 text-gray-800">
@@ -297,7 +334,11 @@ const ProjectDetails = () => {
                 {project.biddingDeadline && (
                   <p>
                     Bidding Deadline:{" "}
-                    <span className={`font-medium ${biddingExpired ? 'text-red-600' : 'text-blue-600'}`}>
+                    <span
+                      className={`font-medium ${
+                        biddingExpired ? "text-red-600" : "text-blue-600"
+                      }`}
+                    >
                       {formatDate(project.biddingDeadline)}
                     </span>
                   </p>
@@ -393,7 +434,7 @@ const ProjectDetails = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="overflow-x-auto bg-white rounded-lg shadow">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -481,27 +522,31 @@ const ProjectDetails = () => {
                                   <button
                                     onClick={() =>
                                       handleStatusChange(
-                                        application._id,
                                         application.freelancerId,
-                                        "hired"
+                                        application.freelancerName,
+                                        "selected",
+                                        application._id
                                       )
                                     }
                                     disabled={
-                                      statusLoading === `${application._id}-hired`
+                                      statusLoading ===
+                                      `${application._id}-hired`
                                     }
                                     className="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors flex items-center"
                                   >
                                     <Check size={14} className="mr-1" />
-                                    {statusLoading === `${application._id}-hired`
-                                      ? "Hiring..."
-                                      : "Hire"}
+                                    {statusLoading ===
+                                    `${application._id}-hired`
+                                      ? "Selecting..."
+                                      : "Select"}
                                   </button>
                                   <button
                                     onClick={() =>
                                       handleStatusChange(
-                                        application._id,
                                         application.freelancerId,
-                                        "rejected"
+                                        application.freelancerName,
+                                        "rejected",
+                                        application._id
                                       )
                                     }
                                     disabled={
@@ -602,7 +647,7 @@ const ProjectDetails = () => {
               </table>
             </div>
           </div>
-
+          <BiddingRoomSection projectId={id} project={project} />
           <div className="flex mt-10 flex-col items-center space-y-4">
             <p className="text-lg font-semibold">Project completion status:</p>
             <div className="flex space-x-4">
@@ -637,6 +682,7 @@ const ProjectDetails = () => {
               </button>
             </div>
           </div>
+
         </div>
       </div>
       <Footer />

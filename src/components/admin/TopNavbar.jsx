@@ -29,13 +29,13 @@ const TopNavbar = ({ toggleSidebar }) => {
           <div className="relative">
             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white">
               <span className="text-sm font-medium">
-                {admin?.name?.slice(0, 2)?.toUpperCase() || "AD"}
+                {admin?.user?.userName?.slice(0, 2)?.toUpperCase() || "AD"}
               </span>
             </div>
           </div>
 
           <div className="ml-3 hidden md:block">
-            <p className="text-sm font-medium">{admin?.name || "Admin"}</p>
+            <p className="text-sm font-medium">{admin?.user?.userName || "Admin"}</p>
             <p className="text-xs text-gray-500">Admin</p>
           </div>
         </div>

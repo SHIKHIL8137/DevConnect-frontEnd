@@ -157,56 +157,6 @@ const Home = () => {
         <RecentlyPostedWorks/>
       </section>
       <section className="py-16 bg-gray-50">
-        {/* <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <p className="text-gray-400 text-xl mb-2">
-              Logos, websites, book covers & more!
-            </p>
-            <h1 className="text-5xl font-bold mb-8">
-              Checkout The Best{" "}
-              <span className="text-blue-500">Portfolios</span> Here
-            </h1>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {portfolios.map((portfolio) => (
-              <div
-                key={portfolio.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden"
-              >
-                <div className="h-64 bg-gray-200 relative">
-                  <img
-                    src={portfolio.image}
-                    alt={`${portfolio.name}'s portfolio`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-2xl font-bold">{portfolio.name}</h3>
-                    <p className="text-gray-500">{portfolio.role}</p>
-                  </div>
-                  <div className="text-blue-500">
-                    <ChevronRight size={24} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center mt-12 space-x-2">
-            {portfolios.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-12 h-2 rounded-full ${
-                  activeSlide === index ? "bg-blue-500" : "bg-gray-300"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div> */}
         <PortfolioSlider/>
       </section>
       <Footer />

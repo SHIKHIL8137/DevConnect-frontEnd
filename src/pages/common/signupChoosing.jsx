@@ -14,7 +14,7 @@ const signupChoosing = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white flex flex-col items-center px-4 py-6">
       <div className="w-full mb-4">
         <Navbar />
       </div>

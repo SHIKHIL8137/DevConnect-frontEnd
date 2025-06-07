@@ -41,3 +41,22 @@ export const deleteProject = (projectId, attachmentId) => {
     `/api/project/attachment?projectId=${projectId}&attachmentId=${attachmentId}`
   );
 };
+
+
+export const onStatusChange =(formData)=>{
+  return axiosInstance.post('/api/project/application/status',formData,{withCredentials:true})
+}
+
+export const fetchProjectsByIds = (ids) => {
+  return axiosInstance.get('/api/project/projectDatas', {
+    params: { ids: ids.join(",") }
+  });
+};
+
+export const projectCount = (id)=>{
+  return axiosInstance.get(`/api/project/projectCount/${id}`,{withCredentials:true});
+}
+
+export const updateProjectDeadLine =(projectId,formData)=>{
+  return axiosInstance.patch(`/api/project/recreateBidding/${projectId}`,formData,{withCredentials:true})
+}

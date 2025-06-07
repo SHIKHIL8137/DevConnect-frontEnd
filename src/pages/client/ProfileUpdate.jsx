@@ -178,7 +178,7 @@ const ProfileUpdate = () => {
     }
   };
   return (
-    <div className="pt-8 w-full min-h-screen bg-gray-100 ">
+    <div className="pt-8 w-full min-h-screen bg-gradient-to-br from-sky-50 to-white ">
       <Navbar />
       <div className="w-full max-w-4xl mx-auto p-8 bg-white rounded-xl border border-gray-200 shadow-sm my-10 py-10">
         <h1 className="text-3xl font-bold text-center mb-10">Profile Update</h1>

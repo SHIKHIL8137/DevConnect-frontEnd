@@ -81,6 +81,37 @@ export const validateProfileForm = (formData) => {
     errors.web = "Please enter a valid website URL";
   }
 
+  if (!Array.isArray(formData.languages) || formData.languages.length === 0) {
+    errors.languages = "At least one language is required";
+  } else {
+    formData.languages.forEach((language, index) => {
+      if (!language.name || !language.name.trim()) {
+        errors.languages = `Language ${index + 1}: Name is required`;
+      }
+      if (!language.proficiency || !['Beginner', 'Intermediate', 'Fluent', 'Native'].includes(language.proficiency)) {
+        errors.languages = `Language ${index + 1}: Valid proficiency level is required`;
+      }
+    });
+  }
+
+  if (!Array.isArray(formData.education) || formData.education.length === 0) {
+    errors.education = "At least one education entry is required";
+  } else {
+    formData.education.forEach((edu, index) => {
+      if (!edu.degree || !edu.degree.trim()) {
+        errors.education = `Education ${index + 1}: Degree is required`;
+      }
+      if (!edu.institution || !edu.institution.trim()) {
+        errors.education = `Education ${index + 1}: Institution is required`;
+      }
+      if (!edu.year || !edu.year.trim()) {
+        errors.education = `Education ${index + 1}: Year is required`;
+      } else if (!/^\d{4}$/.test(edu.year.trim())) {
+        errors.education = `Education ${index + 1}: Year must be a valid 4-digit number`;
+      }
+    });
+  }
+
   return {
     errors,
     isValid: Object.keys(errors).length === 0
@@ -105,6 +136,27 @@ export const formatProfileData = (formData) => {
       ? formData.skills.split(',').map(skill => skill.trim()).filter(Boolean)
       : [];
   }
+
+   formatted.languages = Array.isArray(formData.languages)
+    ? formData.languages
+        .filter(lang => lang.name && lang.name.trim() && lang.proficiency)
+        .map(lang => ({
+          name: lang.name.trim(),
+          proficiency: lang.proficiency,
+        }))
+    : [];
+
+  // Format education
+  formatted.education = Array.isArray(formData.education)
+    ? formData.education
+        .filter(edu => edu.degree && edu.degree.trim() && edu.institution && edu.institution.trim() && edu.year && edu.year.trim())
+        .map(edu => ({
+          degree: edu.degree.trim(),
+          institution: edu.institution.trim(),
+          field: edu.field ? edu.field.trim() : '',
+          year: edu.year.trim(),
+        }))
+    : [];
 
   ['gitHub', 'linkedIn', 'twitter', 'web'].forEach(site => {
     if (formatted[site] && !formatted[site].match(/^https?:\/\//)) {

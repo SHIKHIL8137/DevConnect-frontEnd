@@ -210,10 +210,8 @@ const SignUp = () => {
       setIsOtpSent(false);
       setIsOtpVerified(false);
       setCountdown(0);
-      toast.success(response.data.message);
-      
-      // Redirect to login after successful signup
-      setTimeout(() => navigate("/login"), 1500);
+      toast.success(response.data.message);     
+ navigate("/login");
     } catch (error) {
       toast.error(error.response?.data?.message || "Error creating account");
     } finally {
@@ -226,7 +224,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 px-4 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-4 py-4">
       <Navbar />
       <div className="flex items-center justify-center w-full h-full mt-15">
         <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">

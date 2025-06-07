@@ -101,11 +101,12 @@ const AddProjectForm = () => {
     }
   };
 
-  const getMinDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  };
+ const getMinDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -232,7 +233,7 @@ const AddProjectForm = () => {
   const isFormDisabled = isSubmitting || uploadingFiles;
 
   return (
-    <div className="pt-8 w-full min-h-screen bg-gray-100">
+    <div className="pt-8 w-full min-h-screen bg-gradient-to-br from-sky-50 to-white">
       <Navbar />
       <div className="flex flex-col py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-full mx-20">

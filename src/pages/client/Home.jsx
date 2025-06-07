@@ -6,6 +6,7 @@ import {
   Search,
   MessageSquare,
   RefreshCw,
+  Award,
 } from "lucide-react";
 import Navbar from "../../components/user/navbar/navbar";
 import Footer from "../../components/user/footer/Footer";
@@ -24,15 +25,16 @@ const FreelancerMarketplace = () => {
   const [minRating, setMinRating] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(3);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedRate, setSelectedRate] = useState("");
   const [selectedExperience, setSelectedExperience] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [sortOrder, setSortOrder] = useState("desc");
   const [totalFreelancers, setTotalFreelancers] = useState(0);
   const [loading, setLoading] = useState(false);
+   const [skillFilter, setSkillFilter] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState([]);
 
   const fetchFreelancer = useCallback(async () => {
     try {
@@ -49,9 +51,10 @@ const FreelancerMarketplace = () => {
         limit: 5,
         sortBy,
         sortOrder,
+        skill: selectedSkills.join(','),
       });
       setFreelancers(response.data.data);
-      setTotalPages(response.data.pages);
+      setTotalPages(response.data.totalPage);
       setTotalFreelancers(response.data.total);
       setLoading(false);
     } catch (error) {
@@ -70,6 +73,7 @@ const FreelancerMarketplace = () => {
     page,
     sortBy,
     sortOrder,
+    selectedSkills,
   ]);
 
   useEffect(() => {
@@ -105,15 +109,15 @@ const FreelancerMarketplace = () => {
     setMaxPrice("");
     setMinRating("");
     setExperienceLevel("");
-    setSelectedCategory("All");
     setSelectedRate("");
     setSelectedExperience("");
     setSortBy("rating");
     setSortOrder("desc");
     setPage(1);
+    setSkillFilter("");
+    setSelectedSkills([]);
   };
 
-  const categories = ["All", "Nodejs", "React", "MongoDB"];
 
   const hourlyRates = [
     { label: "₹0 - ₹500", min: "0", max: "500" },
@@ -122,11 +126,23 @@ const FreelancerMarketplace = () => {
     { label: "₹1500+", min: "1500", max: "" },
   ];
 
+    const popularSkills = [
+    "react", "javascript", "node", "mongo", "python", "django", 
+    "flutter", "react native", "vue", "angular", "php", "laravel",
+    "wordpress", "shopify", "figma", "photoshop", "illustrator",
+    "html", "css", "bootstrap", "tailwind", "sass", "typescript",
+    "express", "next.js", "nuxt.js", "firebase", "aws", "docker"
+  ];
+
+
   const experienceLevels = ["Entry", "Intermediate", "Expert"];
 
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-    setSkill(category === "All" ? "" : category);
+ const handleSkillToggle = (skill) => {
+    setSelectedSkills(prev => 
+      prev.includes(skill) 
+        ? prev.filter(s => s !== skill)
+        : [...prev, skill]
+    );
     setPage(1);
   };
 
@@ -172,24 +188,6 @@ const FreelancerMarketplace = () => {
             Connect with skilled professionals specializing in development,
             design, and IT solutions
           </p>
-
-          <form
-            onSubmit={handleSearch}
-            className="flex flex-col sm:flex-row w-full max-w-2xl mx-auto"
-          >
-            <div className="relative flex-grow">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={20} className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search by skill, role or keyword..."
-                className="block w-full pl-10 pr-3 py-4 rounded-lg border-transparent focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-center border px-4 shadow "
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </form>
         </div>
 
         <div className="absolute bottom-6 right-6">
@@ -198,8 +196,22 @@ const FreelancerMarketplace = () => {
           </button>
         </div>
       </div>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screenbg-gradient-to-br from-sky-50 to-white">
         <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <div className="relative flex-grow max-w-2xl mx-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={20} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by skill, role or keyword..."
+              className="block w-full pl-10 pr-3 py-4 rounded-lg focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-center shadow-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
           <div className="flex flex-col lg:flex-row">
             <div className="lg:hidden mb-4">
               <button
@@ -237,24 +249,46 @@ const FreelancerMarketplace = () => {
                   </button>
                 </div>
 
-                {/* <div className="mb-6">
-                  <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
-                  <ul>
-                    {categories.map((category) => (
-                      <li
-                        key={category}
-                        onClick={() => handleCategorySelect(category)}
-                        className={`py-2 px-3 mb-1 rounded-md cursor-pointer hover:bg-gray-100 ${
-                          category === selectedCategory
-                            ? "bg-blue-100 text-blue-600"
-                            : ""
-                        }`}
-                      >
-                        {category}
-                      </li>
-                    ))}
-                  </ul>
-                </div> */}
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-700 mb-3 flex items-center">
+                    Skills
+                  </h3>
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      placeholder="Search skills..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={skillFilter}
+                      onChange={(e) => setSkillFilter(e.target.value)}
+                    />
+                  </div>
+                  <div className="max-h-40 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {popularSkills
+                        .filter(skill => 
+                          skill.toLowerCase().includes(skillFilter.toLowerCase())
+                        )
+                        .map((skill) => (
+                          <button
+                            key={skill}
+                            onClick={() => handleSkillToggle(skill)}
+                            className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                              selectedSkills.includes(skill)
+                                ? "bg-blue-500 text-white border-blue-500"
+                                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                            }`}
+                          >
+                            {skill}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                  {selectedSkills.length > 0 && (
+                    <div className="mt-2 text-sm text-blue-600">
+                      {selectedSkills.length} skill{selectedSkills.length > 1 ? 's' : ''} selected
+                    </div>
+                  )}
+                </div>
 
                 <div className="mb-6">
                   <h3 className="font-medium text-gray-700 mb-3">
@@ -424,8 +458,8 @@ const FreelancerMarketplace = () => {
                   )}
                 </div>
               )}
-
-              {totalPages > 1 && (
+   
+              {totalPages>1 && (
                 <div className="flex justify-center mt-8">
                   <div className="flex space-x-2">
                     <button

@@ -1,16 +1,41 @@
 import { useEffect, useState } from "react";
-import { Download, CheckCircle, X, Loader2 } from "lucide-react";
+import {
+  Download,
+  CheckCircle,
+  X,
+  Loader2,
+  Check,
+  ChevronDown,
+  Clock,
+  AlertTriangle,
+  Gavel,
+  Users,
+  DollarSign,
+  Calendar,
+  Eye,
+  ArrowRight,
+  Timer,
+  Trophy,
+} from "lucide-react";
 import { projectDetails } from "../../apis/projectApi";
 import { toast } from "sonner";
 import Navbar from "../../components/user/navbar/navbar";
 import Footer from "../../components/user/footer/Footer";
 import { applyProject } from "../../apis/userApi";
+import { getBiddings } from "../../apis/biddingApi";
+import { useNavigate } from "react-router-dom";
+import BiddingRoomsList from "../../components/user/biddingCard/BiddingCardList";
 
 const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
   const [hasApplied, setHasApplied] = useState(false);
   const [appliedUser, setAppliedUser] = useState({});
+  const [timeRemaining, setTimeRemaining] = useState("");
+  const [biddingExpired, setBiddingExpired] = useState(false);
+  const [biddingRooms, setBiddingRooms] = useState([]);
+  const navigate = useNavigate()
+
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
   const getProjectDetails = async () => {
@@ -18,7 +43,7 @@ const ProjectDetails = () => {
       setLoading(true);
 
       const response = await projectDetails(id);
-      console.log(response);
+      const responseBidding = await getBiddings(id)
       if (!response.status) {
         toast.error(
           response.data?.message || "Failed to fetch project",
@@ -26,6 +51,14 @@ const ProjectDetails = () => {
         );
         return;
       }
+      if (!responseBidding.status) {
+        toast.error(
+          response.data?.message || "Failed to fetch biddings",
+          "error"
+        );
+        return;
+      }
+      setBiddingRooms(responseBidding.data.data)
       setProject(response.data.projectData);
       setHasApplied(response.data.hasApplied);
       setAppliedUser(response.data.appliedUser);
@@ -37,16 +70,42 @@ const ProjectDetails = () => {
     }
   };
 
-  const apply = async () => {
-    try {
-      
-      const response = await applyProject({ projectId: id });
-      if (!response.status) return toast.error(response?.data?.message);
-      getProjectDetails()
-      toast.success(response?.data?.message);
-    } catch (error) {
-      toast.error(error.response.data.message || "An error occurred", "error");
-      console.log(error);
+
+
+  const calculateTimeRemaining = () => {
+    if (!project?.biddingDeadline) return;
+
+    const deadline = new Date(project.biddingDeadline);
+    const now = new Date();
+    const timeDiff = deadline.getTime() - now.getTime();
+
+    if (timeDiff <= 0) {
+      setBiddingExpired(true);
+      setTimeRemaining("Bidding period has ended");
+      return;
+    }
+
+    setBiddingExpired(false);
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(
+      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days > 0) {
+      setTimeRemaining(
+        `${days} day${days > 1 ? "s" : ""}, ${hours} hour${
+          hours > 1 ? "s" : ""
+        } remaining`
+      );
+    } else if (hours > 0) {
+      setTimeRemaining(
+        `${hours} hour${hours > 1 ? "s" : ""}, ${minutes} minute${
+          minutes > 1 ? "s" : ""
+        } remaining`
+      );
+    } else {
+      setTimeRemaining(`${minutes} minute${minutes > 1 ? "s" : ""} remaining`);
     }
   };
 
@@ -55,6 +114,87 @@ const ProjectDetails = () => {
       getProjectDetails();
     }
   }, []);
+
+  useEffect(() => {
+    if (project?.biddingDeadline) {
+      calculateTimeRemaining();
+      const interval = setInterval(calculateTimeRemaining, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [project?.biddingDeadline]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "waiting":
+        return "bg-sky-100 text-sky-800 border-sky-200";
+      case "completed":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "active":
+        return <Gavel className="h-4 w-4" />;
+      case "waiting":
+        return <Timer className="h-4 w-4" />;
+      case "completed":
+        return <Trophy className="h-4 w-4" />;
+      case "cancelled":
+        return <X className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+    const getBiddingDeadlineStatus = () => {
+    if (!project?.biddingDeadline) return null;
+
+    const deadline = new Date(project.biddingDeadline);
+    const now = new Date();
+    const timeDiff = deadline.getTime() - now.getTime();
+    const hoursRemaining = timeDiff / (1000 * 60 * 60);
+
+    if (timeDiff <= 0) {
+      return {
+        status: "expired",
+        color: "text-red-600 bg-red-50",
+        icon: AlertTriangle,
+      };
+    } else if (hoursRemaining <= 24) {
+      return {
+        status: "urgent",
+        color: "text-orange-600 bg-orange-50",
+        icon: Clock,
+      };
+    } else {
+      return {
+        status: "active",
+        color: "text-blue-600 bg-blue-50",
+        icon: Clock,
+      };
+    }
+  };
+
 
   if (loading) {
     return (
@@ -91,15 +231,40 @@ const ProjectDetails = () => {
     currency: "USD",
   }).format(project.budget);
 
+  const biddingStatus = getBiddingDeadlineStatus();
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="bg-gradient-to-br from-sky-50 to-white min-h-screen p-6">
       <Navbar />
       <div className="max-w-6xl mt-5 mb-5 mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-8">
           <h1 className="text-2xl font-bold text-center text-gray-800 mb-8">
             {project.title}
           </h1>
-
+          
+          {project.biddingDeadline && biddingStatus && (
+            <div
+              className={`mb-8 p-4 rounded-lg border ${biddingStatus.color}`}
+            >
+              <div className="flex items-center space-x-2">
+                <biddingStatus.icon className="h-5 w-5" />
+                <div>
+                  <h3 className="font-semibold">
+                    {biddingExpired
+                      ? "Bidding Period Ended"
+                      : "Bidding Deadline"}
+                  </h3>
+                  <p className="text-sm">
+                    {biddingExpired
+                      ? `Bidding ended on ${formatDate(
+                          project.biddingDeadline
+                        )}`
+                      : `Deadline: ${formatDate(project.biddingDeadline)}`}
+                  </p>
+                  <p className="text-sm font-medium mt-1">{timeRemaining}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <div>
               <h2 className="text-xl font-bold mb-4 text-gray-800">
@@ -171,6 +336,18 @@ const ProjectDetails = () => {
                     {new Date(project.createdAt).toLocaleDateString()}
                   </span>
                 </p>
+                {project.biddingDeadline && (
+                  <p>
+                    Bidding Deadline:{" "}
+                    <span
+                      className={`font-medium ${
+                        biddingExpired ? "text-red-600" : "text-blue-600"
+                      }`}
+                    >
+                      {formatDate(project.biddingDeadline)}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -209,7 +386,6 @@ const ProjectDetails = () => {
                 <p className="text-gray-600">No reference links provided</p>
               )}
             </div>
-
             <div>
               <h2 className="text-xl font-bold mb-4 text-gray-800">
                 Attachments
@@ -265,6 +441,8 @@ const ProjectDetails = () => {
                       ? "text-red-500"
                       : appliedUser.status === "hired"
                       ? "text-green-600"
+                      : appliedUser.status === "selected"
+                      ? "text-violet-600"
                       : ""
                   }
                 >
@@ -279,8 +457,16 @@ const ProjectDetails = () => {
             >
               Apply Now
             </button>
-          )}
+          )}         
         </div>
+               {hasApplied && (
+  <BiddingRoomsList 
+    biddingRooms={biddingRooms} 
+    appliedUser={appliedUser}
+    navigate={navigate}
+  />
+)}
+ 
       </div>
       <Footer />
     </div>

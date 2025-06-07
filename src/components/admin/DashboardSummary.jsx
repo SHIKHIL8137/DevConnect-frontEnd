@@ -10,10 +10,12 @@ import { useEffect, useState } from "react";
 import { fetchDashboardData } from "../../apis/adminApi.js";
 import { toast } from "sonner";
 import { SkeletonCard } from "../common/skeleton.jsx";
+import { useNavigate } from "react-router-dom";
 
 const DashboardSummary = () => {
   const [data, setData] = useState(null);
   const [loading, setLoding] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const dashboardData = async () => {
@@ -75,7 +77,7 @@ const DashboardSummary = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold">Recent Freelancers</h2>
-            <button className="text-blue-600 flex items-center text-sm font-medium">
+            <button onClick={()=>navigate('/admin/freelancers')} className="text-blue-600 flex items-center text-sm font-medium cursor-pointer">
               View All <ChevronRight size={16} className="ml-1" />
             </button>
           </div>
@@ -137,7 +139,7 @@ const DashboardSummary = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold">Recent Clients</h2>
-            <button className="text-blue-600 flex items-center text-sm font-medium">
+            <button  onClick={()=>navigate('/admin/clients')} className="text-blue-600 flex items-center text-sm font-medium cursor-pointer">
               View All <ChevronRight size={16} className="ml-1" />
             </button>
           </div>

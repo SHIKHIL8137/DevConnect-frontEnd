@@ -28,11 +28,14 @@ const FreelancerProjectListing = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedBudget, setSelectedBudget] = useState("");
   const [selectedDuration, setSelectedDuration] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
+   const [completionStatus, setCompletionStatus] = useState("");
+  const [selectedCompletionStatus, setSelectedCompletionStatus] = useState("All");
+   const [datePosted, setDatePosted] = useState("");
+  const [selectedDatePosted, setSelectedDatePosted] = useState("All");
   const [totalProjects, setTotalProjects] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +52,8 @@ const FreelancerProjectListing = () => {
         limit: 5,
         sortBy,
         sortOrder,
+        completionStatus,
+    datePosted,
       });
       console.log(response.data)
       setProjects(response.data.data);
@@ -68,7 +73,11 @@ const FreelancerProjectListing = () => {
     duration,
     page,
     sortBy,
+    completionStatus,
+    datePosted,
     sortOrder,
+    completionStatus,
+    datePosted,
   ]);
 
   useEffect(() => {
@@ -98,25 +107,21 @@ const FreelancerProjectListing = () => {
 
   const resetFilters = () => {
     setSearch("");
-    setCategory("");
-    setSelectedCategory("All");
     setMinBudget("");
     setMaxBudget("");
     setSelectedBudget("");
     setDuration("");
+    setCompletionStatus("");
+    setDatePosted("");
+    setSelectedDatePosted("All");
+    setSelectedCompletionStatus("All");
     setSelectedDuration("");
     setSortBy("createdAt");
     setSortOrder("desc");
     setPage(1);
   };
 
-  const categories = [
-    "All",
-    "Web Development",
-    "Mobile App",
-    "UI/UX Design",
-    "DevOps",
-  ];
+
 
   const budgetRanges = [
     { label: "₹0 - ₹1,0000", min: "0", max: "10000" },
@@ -132,11 +137,33 @@ const FreelancerProjectListing = () => {
     "6+ months",
   ];
 
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-    setCategory(category === "All" ? "" : category);
+const completionStatuses = [
+    "open",
+    "committed",
+    "completed",
+    "cancelled",
+  ];
+
+const datePostedOptions = [
+    "Last 24 hours",
+    "Last 3 days",
+    "Last week",
+    "Last month",
+  ];
+
+  const handleDatePostedSelect = (date) => {
+    setSelectedDatePosted(date);
+    setDatePosted(date === "All" ? "" : date);
     setPage(1);
   };
+
+  const handleCompletionStatusSelect = (status) => {
+    setSelectedCompletionStatus(status);
+    setCompletionStatus(status === "All" ? "" : status);
+    setPage(1);
+  };
+
+
 
   const handleBudgetSelect = (budget) => {
     setSelectedBudget(budget.label);
@@ -175,24 +202,6 @@ const FreelancerProjectListing = () => {
             Browse available projects that match your expertise in development,
             design, and IT solutions
           </p>
-
-          <form
-            onSubmit={handleSearch}
-            className="flex flex-col sm:flex-row w-full max-w-2xl mx-auto"
-          >
-            <div className="relative flex-grow">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={20} className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search by keyword, technology or project title..."
-                className="block w-full pl-10 pr-3 py-4 rounded-lg border-transparent focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-center border px-4 shadow"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </form>
         </div>
 
         <div className="absolute bottom-6 right-6">
@@ -201,8 +210,22 @@ const FreelancerProjectListing = () => {
           </button>
         </div>
       </div>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white">
         <div className="container mx-auto px-4 py-6">
+            <div className="mb-6">
+          <div className="relative flex-grow max-w-2xl mx-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={20} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by skill, role or keyword..."
+              className="block w-full pl-10 pr-3 py-4 rounded-lg focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-center shadow-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
           <div className="flex flex-col lg:flex-row">
             <div className="lg:hidden mb-4">
               <button
@@ -240,26 +263,6 @@ const FreelancerProjectListing = () => {
                     Reset All
                   </button>
                 </div>
-
-                {/* Uncomment if you want to use category filters */}
-                {/* <div className="mb-6">
-                  <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
-                  <ul>
-                    {categories.map((cat) => (
-                      <li
-                        key={cat}
-                        onClick={() => handleCategorySelect(cat)}
-                        className={`py-2 px-3 mb-1 rounded-md cursor-pointer hover:bg-gray-100 ${
-                          cat === selectedCategory
-                            ? "bg-blue-100 text-blue-600"
-                            : ""
-                        }`}
-                      >
-                        {cat}
-                      </li>
-                    ))}
-                  </ul>
-                </div> */}
 
                 <div className="mb-6">
                   <h3 className="font-medium text-gray-700 mb-3">
@@ -302,6 +305,40 @@ const FreelancerProjectListing = () => {
                     ))}
                   </ul>
                 </div>
+                {/* <div className="mb-6">
+                  <h3 className="font-medium text-gray-700 mb-3">Project Status</h3>
+                  <div className="space-y-1">
+                    {completionStatuses.map((status) => (
+                      <div
+                        key={status}
+                        onClick={() => handleCompletionStatusSelect(status)}
+                        className={`py-2 px-3 rounded-md cursor-pointer hover:bg-gray-100 ${
+                          status === selectedCompletionStatus ? "bg-blue-100 text-blue-600" : ""
+                        }`}
+                      >
+                        {status}
+                      </div>
+                    ))}
+                  </div>
+                </div> */}
+
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-700 mb-3">Date Posted</h3>
+                  <div className="space-y-1">
+                    {datePostedOptions.map((date) => (
+                      <div
+                        key={date}
+                        onClick={() => handleDatePostedSelect(date)}
+                        className={`py-2 px-3 rounded-md cursor-pointer hover:bg-gray-100 ${
+                          date === selectedDatePosted ? "bg-blue-100 text-blue-600" : ""
+                        }`}
+                      >
+                        {date}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             </div>
 

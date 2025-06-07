@@ -338,7 +338,7 @@ const EditProjectForm = () => {
   const isFormDisabled = isSubmitting || uploadingFiles;
 
   return (
-    <div className="pt-8 w-full min-h-screen bg-gray-100">
+    <div className="pt-8 w-full min-h-screen bg-gradient-to-br from-sky-50 to-white">
       <Navbar />
       {isLoading ? (
         <EditProjectSkeleton />

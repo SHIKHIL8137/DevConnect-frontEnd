@@ -23,7 +23,7 @@ const GoogleAuthRedirect = () => {
   }, [dispatch, location.search, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br bg-gradient-to-br from-sky-50 to-white">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
         <div className="flex flex-col items-center">
           {/* Logo */}

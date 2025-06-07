@@ -21,7 +21,7 @@ const userSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchUserData.fulfilled, (state, action) => {
       state.isAuthenticated = true;
-      state.user = action.payload.user;
+      state.user = action.payload;
     });
     builder.addCase(fetchUserData.rejected, (state) => {
       state.isAuthenticated = false;

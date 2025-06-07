@@ -279,3 +279,28 @@ export const EditProjectSkeleton = () => (
     </div>
   </div>
 );
+
+export const ProjectSkeleton = () => {
+  return (
+    <div className="space-y-6">
+      {[...Array(3)].map((_, index) => (
+        <div
+          key={index}
+          className="bg-white rounded-lg p-5 shadow-md animate-pulse"
+        >
+          <div className="flex justify-between items-start">
+            <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-6 bg-gray-200 rounded w-24"></div>
+          </div>
+          <div className="mt-2 h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="mt-4 flex justify-between items-center">
+            <div className="flex space-x-4">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};

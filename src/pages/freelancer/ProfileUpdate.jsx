@@ -44,6 +44,8 @@ const ProfileUpdate = () => {
     web: "",
     address: "",
     experienceLevel: "",
+    languages: [{ name: "", proficiency: "" }],
+    education: [{ degree: "", institution: "", field: "", year: "" }],
   });
 
   const [errors, setErrors] = useState({});
@@ -82,6 +84,14 @@ const ProfileUpdate = () => {
         web: user?.web || "",
         address: user?.address || "",
         experienceLevel: user?.experienceLevel || "",
+        languages:
+          user?.languages?.length > 0
+            ? user.languages
+            : [{ name: "", proficiency: "" }],
+        education:
+          user?.education?.length > 0
+            ? user.education
+            : [{ degree: "", institution: "", field: "", year: "" }],
       });
 
       if (user.profileImage) {
@@ -221,102 +231,102 @@ const ProfileUpdate = () => {
     }
   };
 
-  const handleRemoveFile = async() => {
+  const handleRemoveFile = async () => {
     try {
       const response = await removeResume();
-      if(!response.data.status)return toast.error(response.data.message);
+      if (!response.data.status) return toast.error(response.data.message);
       setResume(null);
-    setResumeFileName("");
-    setUploadSuccess(false);
-    toast.success(response.data.message);
-    const result = await dispatch(fetchUserData());
+      setResumeFileName("");
+      setUploadSuccess(false);
+      toast.success(response.data.message);
+      const result = await dispatch(fetchUserData());
       if (fetchUserData.fulfilled.match(result)) {
         if (response.data.resumeFileName) {
           setResumeFileName(response.data.resumeFileName);
         }
       }
     } catch (error) {
-       console.error("Error deleteing resume:", error);
+      console.error("Error deleteing resume:", error);
       toast.error(error.response?.data?.message || "Failed to deleting resume");
     }
-    
   };
 
- const handleResumeSelect = (e) => {
-  if (e.target.files && e.target.files[0]) {
-    const file = e.target.files[0];
-    const validTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
+  const handleResumeSelect = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const validTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
 
-    const maxSizeInBytes = 5 * 1024 * 1024; 
+      const maxSizeInBytes = 5 * 1024 * 1024;
 
-    if (!validTypes.includes(file.type)) {
-      toast.error("Only PDF and DOC/DOCX files are allowed");
-      return;
-    }
+      if (!validTypes.includes(file.type)) {
+        toast.error("Only PDF and DOC/DOCX files are allowed");
+        return;
+      }
 
-    if (file.size > maxSizeInBytes) {
-      toast.error("File size must be less than 5MB");
-      return;
-    }
-    const previousResume = resume;
-    const previousFileName = resumeFileName;
+      if (file.size > maxSizeInBytes) {
+        toast.error("File size must be less than 5MB");
+        return;
+      }
+      const previousResume = resume;
+      const previousFileName = resumeFileName;
 
-    setResume(file);
-    setResumeFileName(file.name);
+      setResume(file);
+      setResumeFileName(file.name);
 
-    handleResumeUpload(file, previousResume, previousFileName);
+      handleResumeUpload(file, previousResume, previousFileName);
 
-    if (errors.resume) {
-      setErrors((prev) => ({
-        ...prev,
-        resume: null,
-      }));
-    }
-  }
-};
-
-
-const handleResumeUpload = async (file) => {
-  try {
-    const resumeFormData = new FormData();
-    resumeFormData.append("resume", file);
-
-    setLoading((val) => ({ ...val, resume: true }));
-    const response = await uploadResume(resumeFormData);
-
-    if (!response.data.status) {
-      setResume(previousResume);
-      setResumeFileName(previousFileName);
-      return toast.error(response.data.message);
-    }
-
-    setUploadSuccess(true);
-    const resumeFileName = response.data.files;
-    const profileUpdateResponse = await updateProfile({ resume: resumeFileName });
-
-    if (!profileUpdateResponse.data.status) {
-      toast.error("Failed to update profile with new resume");
-    } else {
-      toast.success("Profile updated with resume");
-    }
-
-    const result = await dispatch(fetchUserData());
-    if (fetchUserData.fulfilled.match(result)) {
-      if (resumeFileName) {
-        setResumeFileName(resumeFileName);
+      if (errors.resume) {
+        setErrors((prev) => ({
+          ...prev,
+          resume: null,
+        }));
       }
     }
-  } catch (error) {
-    console.error("Error uploading resume:", error);
-    toast.error(error.response?.data?.message || "Failed to upload resume");
-  } finally {
-    setLoading((val) => ({ ...val, resume: false }));
-  }
-};
+  };
+
+  const handleResumeUpload = async (file) => {
+    try {
+      const resumeFormData = new FormData();
+      resumeFormData.append("resume", file);
+
+      setLoading((val) => ({ ...val, resume: true }));
+      const response = await uploadResume(resumeFormData);
+
+      if (!response.data.status) {
+        setResume(previousResume);
+        setResumeFileName(previousFileName);
+        return toast.error(response.data.message);
+      }
+
+      setUploadSuccess(true);
+      const resumeFileName = response.data.files;
+      const profileUpdateResponse = await updateProfile({
+        resume: resumeFileName,
+      });
+
+      if (!profileUpdateResponse.data.status) {
+        toast.error("Failed to update profile with new resume");
+      } else {
+        toast.success("Profile updated with resume");
+      }
+
+      const result = await dispatch(fetchUserData());
+      if (fetchUserData.fulfilled.match(result)) {
+        if (resumeFileName) {
+          setResumeFileName(resumeFileName);
+        }
+      }
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      toast.error(error.response?.data?.message || "Failed to upload resume");
+    } finally {
+      setLoading((val) => ({ ...val, resume: false }));
+    }
+  };
 
   const handleSubmit = async () => {
     const { errors, isValid } = validateProfileForm(formData);
@@ -351,6 +361,75 @@ const handleResumeUpload = async (file) => {
     }
   };
 
+  const handleLanguageChange = (index, field, value) => {
+    setFormData((prevData) => {
+      const newLanguages = [...prevData.languages];
+      newLanguages[index] = { ...newLanguages[index], [field]: value };
+      return { ...prevData, languages: newLanguages };
+    });
+
+    if (errors.languages) {
+      setErrors((prev) => ({ ...prev, languages: null }));
+    }
+  };
+
+  const addLanguage = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      languages: [...prevData.languages, { name: "", proficiency: "" }],
+    }));
+  };
+
+  const removeLanguage = (index) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      languages: prevData.languages.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleEducationChange = (index, field, value) => {
+    setFormData((prevData) => {
+      const newEducation = [...prevData.education];
+      newEducation[index] = { ...newEducation[index], [field]: value };
+      return { ...prevData, education: newEducation };
+    });
+
+    if (errors.education) {
+      setErrors((prev) => ({ ...prev, education: null }));
+    }
+  };
+
+  const addEducation = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      education: [
+        ...prevData.education,
+        { degree: "", institution: "", field: "", year: "" },
+      ],
+    }));
+  };
+
+  const removeEducation = (index) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      education: prevData.education.filter((_, i) => i !== index),
+    }));
+  };
+
+  const availabilityOptions = [
+    { value: "Available", label: "Available" },
+    { value: "Partially Available", label: "Partially Available" },
+    { value: "Unavailable", label: "Unavailable" },
+  ];
+
+  const proficiencyOptions = [
+    { value: "", label: "Select Proficiency" },
+    { value: "Beginner", label: "Beginner" },
+    { value: "Intermediate", label: "Intermediate" },
+    { value: "Fluent", label: "Fluent" },
+    { value: "Native", label: "Native" },
+  ];
+
   const experienceLevels = [
     { value: "", label: "Select Experience Level" },
     { value: "entry", label: "Entry Level (0-2 years)" },
@@ -358,7 +437,7 @@ const handleResumeUpload = async (file) => {
     { value: "expert", label: "Expert (5+ years)" },
   ];
   return (
-    <div className="pt-8 w-full min-h-screen bg-gray-100">
+    <div className="pt-8 w-full min-h-screen bg-gradient-to-br from-sky-50 to-white">
       <Navbar />
       <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg my-10">
         <h1 className="text-2xl font-bold text-center mb-8">Profile Update</h1>
@@ -712,7 +791,7 @@ const handleResumeUpload = async (file) => {
                   className={`w-full p-3 bg-gray-50 border ${
                     errors.phoneNumber ? "border-red-500" : "border-gray-200"
                   } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
-                  placeholder="+91 2548615486"
+                  placeholder="9548615486"
                   maxLength={10}
                 />
                 {errors.phoneNumber && (
@@ -823,6 +902,198 @@ const handleResumeUpload = async (file) => {
               </div>
             </div>
           </div>
+
+          <div>
+  <h2 className="text-lg font-medium text-gray-800 mb-4">Languages</h2>
+  {formData?.languages?.map((language, index) => (
+    <div key={index} className="mb-4 p-4 border rounded-lg">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium">Language {index + 1}</h3>
+        {formData.languages.length > 1 && (
+          <button
+            type="button"
+            onClick={() => removeLanguage(index)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor={`language-name-${index}`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Language Name:
+          </label>
+          <input
+            type="text"
+            id={`language-name-${index}`}
+            value={language.name}
+            onChange={(e) =>
+              handleLanguageChange(index, "name", e.target.value)
+            }
+            className={`w-full p-3 bg-gray-50 border ${
+              errors.languages ? "border-red-500" : "border-gray-200"
+            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
+            placeholder="e.g., English"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`language-proficiency-${index}`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Proficiency:
+          </label>
+          <select
+            id={`language-proficiency-${index}`}
+            value={language.proficiency}
+            onChange={(e) =>
+              handleLanguageChange(index, "proficiency", e.target.value)
+            }
+            className={`w-full p-3 bg-gray-50 border ${
+              errors.languages ? "border-red-500" : "border-gray-200"
+            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
+          >
+            {proficiencyOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  ))}
+  <button
+    type="button"
+    onClick={addLanguage}
+    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+  >
+    Add Language
+  </button>
+  {errors.languages && (
+    <p className="mt-1 text-sm text-red-500">{errors.languages}</p>
+  )}
+</div>
+
+<div className="pt-4">
+  <h2 className="text-lg font-medium text-gray-800 mb-4">Education</h2>
+  {formData.education.map((edu, index) => (
+    <div key={index} className="mb-4 p-4 border rounded-lg">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium">Education {index + 1}</h3>
+        {formData.education.length > 1 && (
+          <button
+            type="button"
+            onClick={() => removeEducation(index)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {/* Degree */}
+        <div>
+          <label
+            htmlFor={`education-degree-${index}`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Degree:
+          </label>
+          <input
+            type="text"
+            id={`education-degree-${index}`}
+            value={edu.degree}
+            onChange={(e) =>
+              handleEducationChange(index, "degree", e.target.value)
+            }
+            className={`w-full p-3 bg-gray-50 border ${
+              errors.education ? "border-red-500" : "border-gray-200"
+            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
+            placeholder="e.g., Bachelor of Science"
+          />
+        </div>
+        {/* Institution */}
+        <div>
+          <label
+            htmlFor={`education-institution-${index}`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Institution:
+          </label>
+          <input
+            type="text"
+            id={`education-institution-${index}`}
+            value={edu.institution}
+            onChange={(e) =>
+              handleEducationChange(index, "institution", e.target.value)
+            }
+            className={`w-full p-3 bg-gray-50 border ${
+              errors.education ? "border-red-500" : "border-gray-200"
+            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
+            placeholder="e.g., University Name"
+          />
+        </div>
+        {/* Field of Study */}
+        <div>
+          <label
+            htmlFor={`education-field-${index}`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Field of Study:
+          </label>
+          <input
+            type="text"
+            id={`education-field-${index}`}
+            value={edu.field}
+            onChange={(e) =>
+              handleEducationChange(index, "field", e.target.value)
+            }
+            className={`w-full p-3 bg-gray-50 border ${
+              errors.education ? "border-red-500" : "border-gray-200"
+            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
+            placeholder="e.g., Computer Science"
+          />
+        </div>
+        {/* Year */}
+        <div>
+          <label
+            htmlFor={`education-year-${index}`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Year:
+          </label>
+          <input
+            type="text"
+            id={`education-year-${index}`}
+            value={edu.year}
+            onChange={(e) =>
+              handleEducationChange(index, "year", e.target.value)
+            }
+            className={`w-full p-3 bg-gray-50 border ${
+              errors.education ? "border-red-500" : "border-gray-200"
+            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition`}
+            placeholder="e.g., 2024"
+          />
+        </div>
+      </div>
+    </div>
+  ))}
+  <button
+    type="button"
+    onClick={addEducation}
+    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+  >
+    Add Education
+  </button>
+  {typeof errors.education === "string" && (
+    <p className="mt-1 text-sm text-red-500">{errors.education}</p>
+  )}
+</div>
 
           <div className="pt-4">
             <h2 className="text-lg font-medium text-gray-800 mb-4">
